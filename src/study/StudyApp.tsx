@@ -748,9 +748,8 @@ function LibraryHome() {
               </a>
             ))}
           </div>
-          <p className="st-note">
-            More at <a href="https://github.com/kilimchoi/engineering-blogs">kilimchoi/engineering-blogs</a>.
-          </p>
+          <p className="st-note">Hundreds more blogs, by company:</p>
+          <Links links={[{ label: 'kilimchoi/engineering-blogs', url: 'https://github.com/kilimchoi/engineering-blogs' }]} />
         </>
       )}
     </>

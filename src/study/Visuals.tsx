@@ -31,9 +31,11 @@ const KIND: Record<NodeKey, { icon: string; color: string }> = {
   disk: { icon: 'Archive', color: '#8a9bb3' },
 };
 
-const NW = 74;
-const NH = 34;
-const px = (n: DNode) => ({ x: 6 + n.x * 82, y: 8 + n.y * 46 });
+const NW = 70;
+const NH = 46;
+const COL = 82;
+const ROW = 54;
+const px = (n: DNode) => ({ x: 4 + n.x * COL, y: 10 + n.y * ROW });
 
 export function VisualView({ v }: { v: Visual }) {
   switch (v.kind) {
@@ -76,14 +78,16 @@ export function VisualView({ v }: { v: Visual }) {
 
 function Steps({ items }: { items: { title: string; text: string }[] }) {
   const [i, setI] = useState(0);
+  const [auto, setAuto] = useState(true);
   useEffect(() => {
-    const t = setInterval(() => setI((x) => (x + 1) % items.length), 2600);
+    if (!auto) return;
+    const t = setInterval(() => setI((x) => (x + 1) % items.length), 3200);
     return () => clearInterval(t);
-  }, [items.length]);
+  }, [items.length, auto]);
   return (
     <div className="st-steps">
       {items.map((s, j) => (
-        <div key={s.title} className={`st-step ${j === i ? 'on' : ''} ${j < i ? 'done' : ''}`} onClick={() => setI(j)}>
+        <div key={s.title} className={`st-step ${j === i ? 'on' : ''} ${j < i ? 'done' : ''}`} onClick={() => (setAuto(false), setI(j))}>
           <span>{j + 1}</span>
           <div>
             <b>{s.title}</b>
@@ -115,13 +119,13 @@ export function Diagram({ frames }: { frames: DFrame[] }) {
     return [...m.values()];
   }, [frames]);
   const maxY = Math.max(...allNodes.map((n) => n.y)) + 1;
-  const height = 8 + maxY * 46;
+  const height = 10 + (maxY - 1) * ROW + NH + 10;
   const maxX = Math.max(...allNodes.map((n) => n.x));
-  const width = Math.max(340, 14 + maxX * 82 + NW);
+  const width = Math.max(340, 10 + maxX * COL + NW);
   const cur = new Map(frame.nodes.map((n) => [n.id, n]));
 
   return (
-    <div className="st-diagram" onClick={() => frames.length > 1 && setPaused((p) => !p)}>
+    <div className="st-diagram">
       <svg viewBox={`0 0 ${width} ${height}`} width="100%" style={{ display: 'block' }}>
         {frame.links.map((l, i) => {
           const a = cur.get(l.from);
@@ -143,18 +147,18 @@ export function Diagram({ frames }: { frames: DFrame[] }) {
             <g key={key}>
               <path d={d} stroke={l.dashed ? '#a78bfa' : '#2a3a52'} strokeWidth={l.dashed ? 2 : 4} strokeDasharray={l.dashed ? '4 4' : undefined} fill="none" strokeLinecap="round" />
               {Array.from({ length: rate }, (_, k) => (
-                <circle key={k} r={3.2} fill={color}>
+                <circle key={k} r={3.8} fill={color}>
                   <animateMotion dur={`${dur}s`} repeatCount="indefinite" path={d} begin={`-${(k * dur) / Math.max(1, rate)}s`} />
                 </circle>
               ))}
               {l.back &&
                 Array.from({ length: Math.max(1, rate - 1) }, (_, k) => (
-                  <circle key={`b${k}`} r={2.4} fill="#34d399" opacity={0.85}>
+                  <circle key={`b${k}`} r={3} fill="#34d399" opacity={0.85}>
                     <animateMotion dur={`${dur}s`} repeatCount="indefinite" path={back} begin={`-${dur / 2 + (k * dur) / Math.max(1, rate)}s`} />
                   </circle>
                 ))}
               {l.label && (
-                <text x={(s.x + e.x) / 2} y={(s.y + e.y) / 2 - 5} textAnchor="middle" fontSize="8.5" fill="#9fb0c8" fontFamily="Inter, sans-serif">
+                <text x={(s.x + e.x) / 2} y={(s.y + e.y) / 2 - 6} textAnchor="middle" fontSize="12.5" fontWeight={600} fill="#b6c4d8" fontFamily="Inter, sans-serif" paintOrder="stroke" stroke="#0e141e" strokeWidth={3}>
                   {l.label}
                 </text>
               )}
@@ -172,19 +176,16 @@ export function Diagram({ frames }: { frames: DFrame[] }) {
             <g key={n0.id} className={`st-node ${st ?? ''}`} style={{ transform: `translate(${p.x}px, ${p.y}px)`, opacity: visible ? (st === 'dim' ? 0.35 : 1) : 0 }}>
               <rect width={NW} height={NH} rx={7} fill="#131b27" stroke={st === 'down' ? '#f43f5e' : st === 'new' ? '#f5a524' : spec.color + '99'} strokeWidth={st === 'new' ? 2 : 1.2} strokeDasharray={st === 'down' ? '4 3' : undefined} />
               <rect x={0} y={6} width={3} height={NH - 12} rx={1.5} fill={spec.color} />
-              <svg x={7} y={9} width={16} height={16} overflow="visible">
-                <Icon name={spec.icon} size={16} color={st === 'down' ? '#f43f5e' : spec.color} />
-              </svg>
-              <NodeLabel text={node.label} />
+              <NodeLabel text={node.label} icon={spec.icon} color={st === 'down' ? '#f43f5e' : spec.color} />
               {st === 'down' && (
-                <text x={NW - 10} y={13} fontSize={11} fill="#f43f5e" fontWeight={700} textAnchor="middle">
+                <text x={NW - 9} y={13} fontSize={12} fill="#f43f5e" fontWeight={700} textAnchor="middle">
                   ✕
                 </text>
               )}
               {node.badge && (
                 <g>
-                  <rect x={NW - 26} y={-7} width={30} height={13} rx={6.5} fill="#0a0e15" stroke="#f5a524" />
-                  <text x={NW - 11} y={2.5} fontSize={7.5} fill="#f5a524" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontWeight={700}>
+                  <rect x={NW - 34} y={-10} width={40} height={18} rx={9} fill="#0a0e15" stroke="#f5a524" />
+                  <text x={NW - 14} y={4} fontSize={12.5} fill="#f5a524" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontWeight={700}>
                     {node.badge}
                   </text>
                 </g>
@@ -193,59 +194,76 @@ export function Diagram({ frames }: { frames: DFrame[] }) {
           );
         })}
       </svg>
-      {(frame.caption || frames.length > 1) && (
-        <div className="st-caption">
-          {frames.length > 1 && (
-            <span className="st-dots">
+      {frames.length > 1 && (
+        <div className="st-dctl">
+          <button aria-label="Previous step" onClick={() => (setPaused(true), setF((f + frames.length - 1) % frames.length))}>
+            <Icon name="ChevronLeft" size={20} />
+          </button>
+          <div className="st-dctl-mid">
+            <span>
+              Step {f + 1} of {frames.length}
+            </span>
+            <span className="st-dctl-bar">
               {frames.map((_, j) => (
-                <i
-                  key={j}
-                  className={j === f ? 'on' : ''}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setF(j);
-                    setPaused(true);
-                  }}
-                />
+                <i key={j} className={j === f ? 'on' : j < f ? 'done' : ''} />
               ))}
             </span>
-          )}
-          <span>{frame.caption}</span>
+          </div>
+          <button aria-label="Next step" onClick={() => (setPaused(true), setF((f + 1) % frames.length))}>
+            <Icon name="ChevronRight" size={20} />
+          </button>
+          <button aria-label={paused ? 'Play' : 'Pause'} className={paused ? 'play' : ''} onClick={() => setPaused((p) => !p)}>
+            <Icon name={paused ? 'Play' : 'Pause'} size={18} />
+          </button>
         </div>
       )}
+      {frame.caption && <div className="st-caption">{frame.caption}</div>}
     </div>
   );
 }
 
-/** One line when it fits, otherwise two smaller lines split at a space. */
-function NodeLabel({ text }: { text: string }) {
-  const props = { x: 27, fontWeight: 600, fill: '#e5edf7', fontFamily: 'Inter, sans-serif' } as const;
-  if (text.length <= 10) {
+const LABEL_MAX = 10;
+
+/**
+ * Short labels: icon on top, label centred underneath at full node width.
+ * Long labels: two centred lines (the colour stripe still shows the kind).
+ */
+function NodeLabel({ text, icon, color }: { text: string; icon: string; color: string }) {
+  const props = { x: NW / 2 + 1, textAnchor: 'middle', fontWeight: 600, fill: '#e5edf7', fontFamily: 'Inter, sans-serif', fontSize: 13 } as const;
+  const fit = (t: string) => (t.length >= 8 ? { textLength: NW - 8, lengthAdjust: 'spacingAndGlyphs' as const } : {});
+  if (text.length <= LABEL_MAX) {
     return (
-      <text {...props} y={21} fontSize={9.5}>
-        {text}
-      </text>
+      <>
+        <svg x={NW / 2 - 7} y={6} width={16} height={16} overflow="visible">
+          <Icon name={icon} size={16} color={color} />
+        </svg>
+        <text {...props} y={37} {...fit(text)}>
+          {text}
+        </text>
+      </>
     );
   }
-  const words = text.split(' ');
+  // long identifiers like links_to_crawl may also break after an underscore
+  const words = text.split(' ').flatMap((w) => (w.length > LABEL_MAX ? w.split(/(?<=_)/) : [w]));
+  const join = (x: string, w: string) => (!x ? w : x.endsWith('_') ? x + w : `${x} ${w}`);
   let a = '';
   let i = 0;
-  while (i < words.length && (a + ' ' + words[i]).trim().length <= 11) a = (a + ' ' + words[i++]).trim();
+  while (i < words.length && join(a, words[i]).length <= LABEL_MAX) a = join(a, words[i++]);
   if (!a) a = words[i++] ?? '';
-  let b = words.slice(i).join(' ');
-  if (a.length > 12) a = a.slice(0, 11) + '…';
-  if (b.length > 12) b = b.slice(0, 11) + '…';
+  let b = words.slice(i).reduce(join, '');
+  if (a.length > LABEL_MAX) a = a.slice(0, LABEL_MAX - 1) + '…';
+  if (b.length > LABEL_MAX) b = b.slice(0, LABEL_MAX - 1) + '…';
   return (
-    <text {...props} fontSize={8.2}>
-      <tspan x={27} y={b ? 15.5 : 20}>
+    <>
+      <text {...props} y={b ? 20 : 28} {...fit(a)}>
         {a}
-      </tspan>
+      </text>
       {b && (
-        <tspan x={27} y={25.5}>
+        <text {...props} y={36} {...fit(b)}>
           {b}
-        </tspan>
+        </text>
       )}
-    </text>
+    </>
   );
 }
 

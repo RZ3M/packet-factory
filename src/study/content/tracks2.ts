@@ -236,7 +236,7 @@ export const TRACKS_2: Track[] = [
             t: 'Split metadata from blobs',
             v: diagram(
               fr('Small rows (who, when, where) in SQL; the bytes in an object store.', [U(), n('a', 'App', 'app', 1.2, 1), n('d', 'Metadata', 'db', 2.8, 0.3), n('s', 'Object store', 's3', 2.8, 1.7)], [l('u', 'a'), l('a', 'd', { rate: 1 }), l('a', 's', { color: C.static })]),
-              fr('Clients upload straight to storage with a pre-signed URL; a CDN serves downloads.', [U(), n('a', 'App', 'app', 1.2, 0.3), n('s', 'Object store', 's3', 2.8, 1.7), n('c', 'CDN', 'cdn', 1.2, 1.7)], [l('u', 'a', { rate: 1, label: 'get URL' }), l('u', 's', { color: C.write, label: 'PUT' }), l('c', 's', { color: C.static, rate: 1 }), l('u', 'c', { color: C.static, back: true })]),
+              fr('Clients upload straight to storage with a pre-signed URL; a CDN serves downloads.', [U(), n('a', 'App', 'app', 1.6, 0), n('s', 'Object store', 's3', 3.2, 1), n('c', 'CDN', 'cdn', 1.6, 2)], [l('u', 'a', { rate: 1, label: 'get URL' }), l('u', 's', { color: C.write, label: 'PUT' }), l('c', 's', { color: C.static, rate: 1 }), l('u', 'c', { color: C.static, back: true })]),
             ),
           },
           { t: 'Why', pts: ['Practically unlimited, cheap, 11 nines durability', 'Keeps the database small and fast', 'Objects are immutable — perfect for CDN caching', 'Higher latency than a disk: not for hot small reads'] },

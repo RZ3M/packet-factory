@@ -18,8 +18,15 @@ function checkFrames(frames: DFrame[], where: string) {
     for (const l of f.links) {
       expect(ids.has(l.from) && ids.has(l.to), `${where}: link ${l.from}->${l.to}`).toBe(true);
     }
-    const spots = new Set(f.nodes.map((n) => `${n.x},${n.y}`));
-    expect(spots.size, `${where}: overlapping nodes`).toBe(f.nodes.length);
+    // node boxes are 70x46 on an 82x54 grid (see Visuals.tsx): boxes must not touch
+    const clashes: string[] = [];
+    f.nodes.forEach((a, i) =>
+      f.nodes.slice(i + 1).forEach((b) => {
+        const apart = Math.abs(a.x - b.x) * 82 >= 70 + 4 || Math.abs(a.y - b.y) * 54 >= 46 + 4;
+        if (!apart) clashes.push(`${a.id}/${b.id}`);
+      }),
+    );
+    expect(clashes, `${where} [${f.caption}]: overlapping nodes`).toEqual([]);
   }
 }
 

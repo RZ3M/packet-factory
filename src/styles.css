@@ -1865,3 +1865,10 @@ kbd {
     position: static;
   }
 }
+
+.wg-lat {
+  font-size: 12.5px;
+}
+.wg-note {
+  font-size: 12px;
+}

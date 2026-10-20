@@ -71,11 +71,13 @@ function QueueingWidget() {
         s.busyUntil = t + exp(1 / mu);
         s.served++;
       }
-      // curve
+      // Wide: curve left, live queue right. Narrow (phones): curve on top, queue strip below.
+      const narrow = w < 460;
+      const qh = narrow ? 64 : 0;
       const cx = 12;
-      const cw = w * 0.58 - 24;
-      const ch = h - 40;
-      const top = 14;
+      const cw = (narrow ? w : w * 0.58) - 24;
+      const ch = h - 44 - qh;
+      const top = 22;
       const maxMult = 25;
       ctx.strokeStyle = 'rgba(148,163,184,0.25)';
       ctx.lineWidth = 1;
@@ -94,58 +96,62 @@ function QueueingWidget() {
         else ctx.lineTo(x, y);
       }
       ctx.strokeStyle = '#f5a524';
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 2.5;
       ctx.stroke();
       const mx = cx + rho * cw;
       const my = top + ch - (Math.min(maxMult, 1 / (1 - rho)) / maxMult) * ch;
       ctx.fillStyle = rho < 0.6 ? '#34d399' : rho < 0.85 ? '#fbbf24' : '#f43f5e';
       ctx.beginPath();
-      ctx.arc(mx, my, 6, 0, Math.PI * 2);
+      ctx.arc(mx, my, 7, 0, Math.PI * 2);
       ctx.fill();
       ctx.fillStyle = '#8a9bb3';
-      ctx.font = '11px Inter, sans-serif';
-      ctx.fillText('utilization →', cx + 4, top + ch + 16);
-      ctx.save();
-      ctx.translate(cx + 10, top + 4);
-      ctx.fillText('↑ response time', 0, 8);
-      ctx.restore();
-      ctx.fillStyle = 'rgba(148,163,184,0.5)';
-      ctx.fillText('50%', cx + 0.5 * cw - 8, top + ch + 16);
-      ctx.fillText('90%', cx + 0.9 * cw - 8, top + ch + 16);
-      // live queue on the right
-      const qx = w * 0.62;
-      const qy = h / 2;
+      ctx.font = '13px Inter, sans-serif';
+      ctx.fillText('utilization →', cx + 4, top + ch + 18);
+      ctx.fillText('↑ response time', cx + 8, top - 6);
+      ctx.fillStyle = 'rgba(148,163,184,0.6)';
+      ctx.textAlign = 'center';
+      ctx.fillText('50%', cx + 0.5 * cw, top + ch + 18);
+      ctx.fillText('90%', cx + 0.9 * cw, top + ch + 18);
+      ctx.textAlign = 'left';
+      // live queue
+      const qy = narrow ? h - qh / 2 : h / 2;
+      const boxW = 76;
+      const bx = w - boxW - 12;
       ctx.fillStyle = '#131b27';
       ctx.strokeStyle = '#34d399';
       ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.roundRect(w - 90, qy - 26, 70, 52, 8);
+      ctx.roundRect(bx, qy - 26, boxW, 52, 8);
       ctx.fill();
       ctx.stroke();
       ctx.fillStyle = '#e5edf7';
-      ctx.font = '600 11px Inter, sans-serif';
-      ctx.fillText('Server', w - 74, qy - 6);
+      ctx.font = '600 13px Inter, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Server', bx + boxW / 2, qy - 6);
+      ctx.textAlign = 'left';
       ctx.fillStyle = s.busyUntil > t ? '#38bdf8' : '#334155';
       ctx.beginPath();
-      ctx.arc(w - 55, qy + 10, 6, 0, Math.PI * 2);
+      ctx.arc(bx + boxW / 2, qy + 11, 7, 0, Math.PI * 2);
       ctx.fill();
-      const shown = Math.min(s.q, 22);
+      const qLeft = narrow ? 12 : w * 0.62;
+      const cols = Math.max(4, Math.floor((bx - 14 - qLeft) / 12));
+      const shown = Math.min(s.q, cols * 2);
       for (let i = 0; i < shown; i++) {
-        const col = i % 11;
-        const row = Math.floor(i / 11);
-        ctx.fillStyle = i > 10 ? '#f43f5e' : '#f5a524';
-        ctx.fillRect(w - 104 - col * 11, qy - 6 + row * 11 - 4, 8, 8);
+        const col = i % cols;
+        const row = Math.floor(i / cols);
+        ctx.fillStyle = i >= cols ? '#f43f5e' : '#f5a524';
+        ctx.fillRect(bx - 14 - col * 12, qy - 12 + row * 12, 9, 9);
       }
       ctx.fillStyle = '#8a9bb3';
-      ctx.font = '11px Inter, sans-serif';
-      ctx.fillText(`waiting: ${s.q}`, qx, qy + 44);
+      ctx.font = '13px Inter, sans-serif';
+      ctx.fillText(`waiting: ${s.q}`, narrow ? 12 : qLeft, narrow ? qy + 24 : qy + 46);
     },
     [rho],
   );
   const mult = 1 / (1 - rho);
   return (
     <div className="widget">
-      <canvas ref={ref} style={{ width: '100%', height: 200 }} />
+      <canvas ref={ref} style={{ width: '100%', height: 220 }} className="wg-queue" />
       <div className="field" style={{ marginTop: 6 }}>
         <label>
           Utilization <span className="mono accent">{Math.round(rho * 100)}%</span>
@@ -183,16 +189,18 @@ function ZipfWidget() {
       const cutoff = Math.round((pct / 100) * N);
       for (let i = 0; i < bars; i++) {
         const rankHi = Math.floor(Math.pow(N, (i + 1) / bars));
-        const bh = Math.max(2, (Math.sqrt(vals[i] / max)) * (h - 30));
+        const bh = Math.max(2, (Math.sqrt(vals[i] / max)) * (h - 44));
         ctx.fillStyle = rankHi <= cutoff ? '#fbbf24' : '#334155';
-        ctx.fillRect(10 + i * bw, h - 20 - bh, Math.max(1, bw - 1.5), bh);
+        ctx.fillRect(10 + i * bw, h - 22 - bh, Math.max(1, bw - 1.5), bh);
       }
       ctx.fillStyle = '#8a9bb3';
-      ctx.font = '11px Inter, sans-serif';
-      ctx.fillText('most popular', 10, h - 5);
-      ctx.fillText('long tail →', w - 72, h - 5);
+      ctx.font = '13px Inter, sans-serif';
+      ctx.fillText('most popular', 10, h - 4);
+      ctx.textAlign = 'right';
+      ctx.fillText('long tail →', w - 10, h - 4);
+      ctx.textAlign = 'left';
       ctx.fillStyle = '#fbbf24';
-      ctx.fillText('■ cached', 10, 12);
+      ctx.fillText('■ cached', 10, 14);
     },
     [skew, pct],
   );
@@ -297,12 +305,13 @@ function HashRingWidget() {
         }
       }
       ctx.fillStyle = '#e5edf7';
-      ctx.font = '700 22px "Chakra Petch", sans-serif';
+      ctx.font = '700 26px "Chakra Petch", sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText(`${Math.round((moved / KEYS) * 100)}%`, cx, cy + 2);
-      ctx.font = '11px Inter, sans-serif';
+      ctx.fillText(`${Math.round((moved / KEYS) * 100)}%`, cx, cy);
+      ctx.font = '13px Inter, sans-serif';
       ctx.fillStyle = '#8a9bb3';
-      ctx.fillText(`of keys moved going ${n - 1} → ${n} nodes`, cx, cy + 20);
+      ctx.fillText('of keys moved', cx, cy + 22);
+      ctx.fillText(`${n - 1} → ${n} nodes`, cx, cy + 39);
       ctx.textAlign = 'left';
     },
     [n, mode, before, after],
@@ -328,7 +337,7 @@ function HashRingWidget() {
             +
           </button>
         </span>
-        <span className="muted" style={{ fontSize: 12 }}>
+        <span className="muted wg-note">
           nodes · pulsing dots = keys that had to move
         </span>
       </div>
@@ -352,8 +361,8 @@ function LatencyWidget() {
       {rows.map((l) => {
         const f = (Math.log10(l.ns) - minLog) / (maxLog - minLog);
         return (
-          <div key={l.op} style={{ fontSize: 12.5 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <div key={l.op} className="wg-lat">
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
               <span>{l.op}</span>
               <b className="mono">{fmtNs(l.ns)}</b>
             </div>

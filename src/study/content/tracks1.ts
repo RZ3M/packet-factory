@@ -119,8 +119,8 @@ export const TRACKS_1: Track[] = [
               fr('1 · One box runs web app and MySQL. Scale up while you can.', [U(), n('a', 'Web + DB', 'app', 1.8, 1)], [l('u', 'a', { back: true })]),
               fr('2 · Split the database out; move static files to object storage + CDN.', [U(), n('cdn', 'CDN', 'cdn', 1.3, 0), n('s3', 'Object store', 's3', 2.8, 0), n('a', 'Web', 'app', 1.3, 1.6), n('d', 'MySQL', 'db', 2.8, 1.6, { state: 'new' })], [l('u', 'cdn', { color: C.static }), l('cdn', 's3', { color: C.static, rate: 1 }), l('u', 'a'), l('a', 'd')]),
               fr('3 · Load balancer + many stateless web servers; replicas for reads.', [U(), n('lb', 'LB', 'lb', 1, 1), n('a1', 'Web', 'app', 2, 0.4), n('a2', 'Web', 'app', 2, 1.6), n('d', 'Primary', 'db', 3.1, 0.4), n('r', 'Replica', 'db', 3.1, 1.6, { state: 'new' })], [l('u', 'lb'), l('lb', 'a1'), l('lb', 'a2'), l('a1', 'd', { color: C.write }), l('a2', 'r'), l('d', 'r', { dashed: true })]),
-              fr('4 · Cache hot reads; queue slow work; autoscale the web tier.', [U(), n('lb', 'LB', 'lb', 0.9, 1), n('a', 'Web ×N', 'app', 1.9, 1, { badge: 'auto' }), n('c', 'Cache', 'cache', 3, 0, { state: 'new' }), n('d', 'MySQL', 'db', 3, 1), n('q', 'Queue', 'queue', 3, 2, { state: 'new' })], [l('u', 'lb'), l('lb', 'a', { rate: 3 }), l('a', 'c', { back: true }), l('a', 'd', { rate: 1 }), l('a', 'q', { color: C.job, rate: 1 })]),
-              fr('5 · Finally: shard / federate the data and split into services.', [U(), n('lb', 'LB', 'lb', 0.9, 1), n('s1', 'Users svc', 'service', 2, 0.3), n('s2', 'Posts svc', 'service', 2, 1.7), n('d1', 'Shard A', 'db', 3.1, 0.3), n('d2', 'Shard B', 'db', 3.1, 1.7)], [l('u', 'lb'), l('lb', 's1'), l('lb', 's2'), l('s1', 'd1'), l('s2', 'd2')]),
+              fr('4 · Cache hot reads; queue slow work; autoscale the web tier.', [U(), n('lb', 'LB', 'lb', 1, 1), n('a', 'Web ×N', 'app', 2, 1, { badge: 'auto' }), n('c', 'Cache', 'cache', 3, 0, { state: 'new' }), n('d', 'MySQL', 'db', 3, 1), n('q', 'Queue', 'queue', 3, 2, { state: 'new' })], [l('u', 'lb'), l('lb', 'a', { rate: 3 }), l('a', 'c', { back: true }), l('a', 'd', { rate: 1 }), l('a', 'q', { color: C.job, rate: 1 })]),
+              fr('5 · Finally: shard / federate the data and split into services.', [U(), n('lb', 'LB', 'lb', 1, 1), n('s1', 'Users svc', 'service', 2, 0.3), n('s2', 'Posts svc', 'service', 2, 1.7), n('d1', 'Shard A', 'db', 3.1, 0.3), n('d2', 'Shard B', 'db', 3.1, 1.7)], [l('u', 'lb'), l('lb', 's1'), l('lb', 's2'), l('s1', 'd1'), l('s2', 'd2')]),
             ),
           },
           { t: 'The loop', v: steps(['Benchmark', 'Load test to find the next limit.'], ['Profile', 'Which component saturates first?'], ['Fix', 'Apply the cheapest pattern that removes it.'], ['Repeat', 'A new bottleneck appears somewhere else.']) },
@@ -299,9 +299,9 @@ export const TRACKS_1: Track[] = [
           {
             t: 'Active-passive',
             v: diagram(
-              fr('Active serves; passive watches heartbeats.', [U(), n('a', 'Active', 'lb', 1.8, 0.4), n('p', 'Passive', 'lb', 1.8, 1.6, { state: 'dim' })], [l('u', 'a'), l('a', 'p', { dashed: true, rate: 1, color: C.repl, label: 'heartbeat' })]),
-              fr('Active dies — heartbeats stop.', [U(), n('a', 'Active', 'lb', 1.8, 0.4, { state: 'down' }), n('p', 'Passive', 'lb', 1.8, 1.6)], [l('u', 'a', { color: C.err })]),
-              fr('Passive takes over the IP.', [U(), n('a', 'Active', 'lb', 1.8, 0.4, { state: 'down' }), n('p', 'Now active', 'lb', 1.8, 1.6, { state: 'new' })], [l('u', 'p')]),
+              fr('Active serves; passive watches heartbeats.', [U(), n('a', 'Active', 'lb', 1.8, 0), n('p', 'Passive', 'lb', 1.8, 2, { state: 'dim' })], [l('u', 'a'), l('a', 'p', { dashed: true, rate: 1, color: C.repl, label: 'heartbeat' })]),
+              fr('Active dies — heartbeats stop.', [U(), n('a', 'Active', 'lb', 1.8, 0, { state: 'down' }), n('p', 'Passive', 'lb', 1.8, 2)], [l('u', 'a', { color: C.err })]),
+              fr('Passive takes over the IP.', [U(), n('a', 'Active', 'lb', 1.8, 0, { state: 'down' }), n('p', 'Now active', 'lb', 1.8, 2, { state: 'new' })], [l('u', 'p')]),
             ),
             b: 'Downtime depends on whether the standby is hot or cold.',
           },
